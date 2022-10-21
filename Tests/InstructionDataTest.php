@@ -34,6 +34,7 @@
 
 use PHPUnit\Framework\TestCase;
 use TASoft\InstructionQueue\Loader\Model\InstructionData;
+use TASoft\InstructionQueue\Loader\Model\InstructionModelFactory;
 
 class InstructionDataTest extends TestCase
 {
@@ -51,5 +52,12 @@ class InstructionDataTest extends TestCase
 
         $a = (array) $d;
         $this->assertSame([89, 7 => 16], $a);
+    }
+
+    public function testArrayLabel() {
+        $d = InstructionModelFactory::makeFromString("Thomas 8 11 Halol > test");
+
+        $this->assertEquals("Thomas", $d->getInstructionName());
+        $this->assertEquals("test", $d->getLabel());
     }
 }

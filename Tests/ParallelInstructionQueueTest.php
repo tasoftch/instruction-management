@@ -37,7 +37,7 @@ use TASoft\InstructionQueue\Instruction\AddressInstruction;
 use TASoft\InstructionQueue\Instruction\JumpInstruction;
 use TASoft\InstructionQueue\Instruction\JumpWithResetInstruction;
 use TASoft\InstructionQueue\Instruction\ReturnInstruction;
-use TASoft\InstructionQueue\Instruction\WaitForParallelsInstruction;
+use TASoft\InstructionQueue\Instruction\WaitForAllParallelsInstruction;
 use TASoft\InstructionQueue\SimpleInstructionQueue;
 
 class ParallelInstructionQueueTest extends TestCase
@@ -139,7 +139,7 @@ class ParallelInstructionQueueTest extends TestCase
         $q->add(function() {echo "2"; });
         $q->add([6, function() {echo "Q"; }]);
 
-        $q->add(new WaitForParallelsInstruction());
+        $q->add(new WaitForAllParallelsInstruction());
 
         $q->add(function() {echo "3"; });
 

@@ -32,46 +32,41 @@
  *
  */
 
-namespace TASoft\InstructionQueue\Loader\Model;
+namespace TASoft\InstructionQueue\Instruction;
 
 
-class InstructionData extends \ArrayObject
+use TASoft\InstructionQueue\AbstractInstructionQueue;
+use TASoft\InstructionQueue\InstructionQueueInterface;
+
+class WaitForAllParallelsInstruction implements InstructionInterface, InstructionQueueDidLoadNotificationInterface, SyncInstructionInterface, ResetInterface
 {
-    /** @var string */
-    private $instructionName;
-    /** @var string|null */
-    private $label;
+    protected $release = false;
+    /** @var AbstractInstructionQueue */
+    protected $queue;
 
     /**
-     * InstructionData constructor.
-     * @param string $instructionName
-     * @param array $data
+     * @inheritDoc
      */
-    public function __construct(string $instructionName, array $data = [])
+    public function process(int $index)
     {
-        $this->instructionName = $instructionName;
-        parent::__construct($data);
+        if(!$this->queue || count($this->queue->getParallelInstructionStack()) < 1)
+            $this->release = true;
+    }
 
-        $lb = array_pop($data);
-        if(array_pop($data) == '>' && $lb) {
-            $this->label = $lb;
-        }
+    public function instructionQueueDidLoad(InstructionQueueInterface $queue)
+    {
+        if($queue instanceof AbstractInstructionQueue)
+            $this->queue = $queue;
+    }
+
+    public function release(): bool
+    {
+        return $this->release;
     }
 
 
-    /**
-     * @return string
-     */
-    public function getInstructionName(): string
+    public function reset()
     {
-        return $this->instructionName;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getLabel(): ?string
-    {
-        return $this->label;
+        $this->release = false;
     }
 }

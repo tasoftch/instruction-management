@@ -65,7 +65,7 @@ abstract class AbstractBinaryDataLoader implements LoaderInterface
             if($f) {
                 $i = $f->makeInstruction($data);
                 if($i)
-                    $instructionQueue->addInstruction($i);
+                    $instructionQueue->addInstruction($i, $data->getLabel());
             } else {
                 $n = $data->getInstructionName();
                 throw (new BadInstructionException("Unknown instruction $n"))->setInstructionModel($data);

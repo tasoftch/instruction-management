@@ -41,9 +41,10 @@ interface InstructionQueueInterface
 {
     /**
      * @param InstructionInterface $instruction
+     * @param string|null $label
      * @return static
      */
-    public function addInstruction(InstructionInterface $instruction);
+    public function addInstruction(InstructionInterface $instruction, string $label = NULL);
 
     /**
      * Returns all registered instructions

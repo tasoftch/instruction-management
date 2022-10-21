@@ -52,6 +52,8 @@ abstract class AbstractInstructionQueue implements TriggeredInstructionQueueInte
     /** @var InstructionInterface[] */
     protected $instructions = [];
     private $addressInstructions = [];
+    private $namedInstructions = [];
+
     /** @var InstructionInterface[] */
     private $parallelInstructionStack = [];
 
@@ -101,7 +103,7 @@ abstract class AbstractInstructionQueue implements TriggeredInstructionQueueInte
     /**
      * @inheritDoc
      */
-    public function addInstruction(InstructionInterface $instruction)
+    public function addInstruction(InstructionInterface $instruction, string $name = NULL)
     {
         if($this->isReady())
             throw new ImmutableInstructionQueueException("Can not change instruction queue after calling ready method");
@@ -114,6 +116,9 @@ abstract class AbstractInstructionQueue implements TriggeredInstructionQueueInte
             }
             $this->addressInstructions[ $instruction->getAddress() ] = $instruction;
         }
+        if($name && !isset($this->namedInstructions[$name]))
+            $this->namedInstructions[$name] = $instruction;
+
         return $this;
     }
 
@@ -255,5 +260,13 @@ abstract class AbstractInstructionQueue implements TriggeredInstructionQueueInte
     public function getParallelInstructionStack(): array
     {
         return $this->parallelInstructionStack;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNamedInstructions(): array
+    {
+        return $this->namedInstructions;
     }
 }

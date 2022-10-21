@@ -43,12 +43,20 @@ class LoopInstructionQueue extends SimpleInstructionQueue implements Instruction
     private $interval;
     private $interruptCallback;
 
+    /**
+     * LoopInstructionQueue constructor.
+     * @param int|null $interval
+     * @param callable|null $interruptCallback
+     * @param array $instructions
+     */
     public function __construct(int $interval = NULL, callable $interruptCallback = NULL, array $instructions = [])
     {
         parent::__construct($instructions);
+        $this->interval = $interval;
+        $this->interruptCallback = $interruptCallback;
     }
 
-    public function addInstruction(InstructionInterface $instruction)
+    public function addInstruction(InstructionInterface $instruction, string $name = NULL)
     {
         if($instruction instanceof SetupInstruction) {
             if($this->interval == NULL && isset($instruction[ SetupInstruction::SETUP_INTERVAL_KEY ]))
@@ -57,7 +65,7 @@ class LoopInstructionQueue extends SimpleInstructionQueue implements Instruction
                 $this->interruptCallback = $instruction[ SetupInstruction::SETUP_TERMINATION_CALLBACK_KEY ];
             return $this;
         }
-        return parent::addInstruction($instruction);
+        return parent::addInstruction($instruction, $name);
     }
 
     public function getInterruptCallback(): ?callable

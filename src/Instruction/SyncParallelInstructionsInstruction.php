@@ -34,39 +34,26 @@
 
 namespace TASoft\InstructionQueue\Instruction;
 
-
-use TASoft\InstructionQueue\AbstractInstructionQueue;
-use TASoft\InstructionQueue\InstructionQueueInterface;
-
-class WaitForParallelsInstruction implements InstructionInterface, InstructionQueueDidLoadNotificationInterface, SyncInstructionInterface, ResetInterface
+class SyncParallelInstructionsInstruction extends WaitForAllParallelsInstruction
 {
-    private $release = false;
-    /** @var AbstractInstructionQueue */
-    private $queue;
+    private $names = [];
 
     /**
-     * @inheritDoc
+     * SyncParallelInstructionsInstruction constructor.
+     * @param array $names
      */
+    public function __construct(array $names)
+    {
+        $this->names = $names;
+    }
+
+
     public function process(int $index)
     {
-        if(!$this->queue || count($this->queue->getParallelInstructionStack()) < 1)
+        if($this->queue && count($this->queue->getParallelInstructionStack()) > 0) {
+            if(array_diff($this->queue->getNamedInstructions(), $this->queue->getParallelInstructionStack()))
+                $this->release = true;
+        } else
             $this->release = true;
-    }
-
-    public function instructionQueueDidLoad(InstructionQueueInterface $queue)
-    {
-        if($queue instanceof AbstractInstructionQueue)
-            $this->queue = $queue;
-    }
-
-    public function release(): bool
-    {
-        return $this->release;
-    }
-
-
-    public function reset()
-    {
-        $this->release = false;
     }
 }
