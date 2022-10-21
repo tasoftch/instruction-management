@@ -51,7 +51,7 @@ class FileFactory extends CallbackFactory implements InstructionPreflightFactory
 
     public function __construct(string $filename)
     {
-        list($name) = explode(".", $filename);
+        list($name) = explode(".", basename($filename));
         if(!is_file($filename))
             throw (new FileNotFoundException("Input file does not exist"))->setFilename($filename);
 
