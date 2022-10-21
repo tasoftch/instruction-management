@@ -97,9 +97,13 @@ class BinaryFileDataLoader extends AbstractBinaryDataLoader
 
             foreach($lines as $line) {
                 $line = trim($line);
-                list($cmd, $args) = preg_split("/\s+/i", $line);
+                $args = preg_split("/\s+/i", $line);
+                $cmd = array_shift($args);
+                if(!$cmd)
+                    continue;
+
                 $d = new InstructionData($cmd, $args);
-                if($this->getInstructionSet()->getInstructionFactory($d)) {
+                if($this->getInstructionSet()->getInstructionFactory($d->getInstructionName())) {
                     $this->instructionData[] = $d;
                 } else
                     throw (new BadInstructionException("Bad instruction"))->setInstructionModel($d);

@@ -46,6 +46,7 @@ class FileFactory extends CallbackFactory implements InstructionPreflightFactory
     const CONFIG_ARRAY_ONLY_KEY = 'array_only';
     const CONFIG_PARAMETER_LIST_KEY = 'params';
     const CONFIG_PREFLIGHT_KEY = 'p_call';
+    const CONFIG_USE_FN_AS_FACTORY = 'use_fn';
 
     private $preflight_callback;
 
@@ -55,7 +56,9 @@ class FileFactory extends CallbackFactory implements InstructionPreflightFactory
         if(!is_file($filename))
             throw (new FileNotFoundException("Input file does not exist"))->setFilename($filename);
 
-        $CONFIG = [];
+        $CONFIG = [
+            self::CONFIG_USE_FN_AS_FACTORY => true
+        ];
 
         $fn = require $filename;
 
@@ -65,14 +68,15 @@ class FileFactory extends CallbackFactory implements InstructionPreflightFactory
 
         $this->preflight_callback = $CONFIG[ static::CONFIG_PREFLIGHT_KEY ] ?? NULL;
 
-        $callback = function($data) use ($fn, $CONFIG) {
-            if($CONFIG[ static::CONFIG_ARRAY_ONLY_KEY ])
+        $callback = function($data) use ($fn, &$CONFIG) {
+            if($CONFIG[ static::CONFIG_ARRAY_ONLY_KEY ] ?? true)
                 $data = (array) $data;
-            elseif($CONFIG[static::CONFIG_PARAMETER_LIST_KEY]) {
+            elseif($CONFIG[static::CONFIG_PARAMETER_LIST_KEY] ?? NULL) {
                 $data = (array) $data;
                 $instruction = $fn(...array_values($data));
             }
-            if(!isset($i))
+
+            if(!isset($instruction))
                 $instruction = $fn($data);
 
             if(is_array($instruction)) {
@@ -87,6 +91,9 @@ class FileFactory extends CallbackFactory implements InstructionPreflightFactory
                 return new SingleCallbackInstruction($instruction);
             elseif($instruction instanceof InstructionInterface)
                 return $instruction;
+            elseif(($CONFIG[self::CONFIG_USE_FN_AS_FACTORY] ?? true) && is_callable($fn)) {
+                return new SingleCallbackInstruction($fn);
+            }
 
             return NULL;
         };

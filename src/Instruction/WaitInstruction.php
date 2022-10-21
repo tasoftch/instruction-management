@@ -35,7 +35,7 @@
 namespace TASoft\InstructionQueue\Instruction;
 
 
-class WaitInstruction implements InstructionInterface, ParallelInstructionInterface, ResetInterface
+class WaitInstruction implements InstructionInterface, ParallelInstructionInterface, ResetInterface, SyncInstructionInterface
 {
     private $count=0, $cycles;
 
@@ -63,6 +63,11 @@ class WaitInstruction implements InstructionInterface, ParallelInstructionInterf
     }
 
     public function isInstructionCompleted(): bool
+    {
+        return $this->count >= $this->cycles;
+    }
+
+    public function release(): bool
     {
         return $this->count >= $this->cycles;
     }
