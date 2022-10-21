@@ -101,5 +101,8 @@ class LoopInstructionQueue extends SimpleInstructionQueue implements Instruction
                 usleep($i);
             }
         }
+
+        if(is_callable( $cb = $this->getInterruptCallback() ))
+            $cb();
     }
 }
