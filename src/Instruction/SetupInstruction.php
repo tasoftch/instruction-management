@@ -32,53 +32,41 @@
  *
  */
 
-namespace TASoft\InstructionQueue\Loader\InstructionSet;
+namespace TASoft\InstructionQueue\Instruction;
 
 
-use TASoft\InstructionQueue\Loader\InstructionFactory\InstructionFactoryInterface;
-
-class ChainInstructionSet implements InstructionSetInterface
+class SetupInstruction implements InstructionInterface, \ArrayAccess
 {
-    /** @var InstructionSetInterface[] */
-    private $sets = [];
+    const SETUP_INTERVAL_KEY = 'interval';
+    const SETUP_TERMINATION_CALLBACK_KEY = 'termination';
 
-    /**
-     * ChainInstructionSet constructor.
-     * @param InstructionSetInterface[] $sets
-     */
-    public function __construct(array $sets = [])
+    private $setup = [];
+
+    public function process(int $index)
     {
-        $this->sets = $sets;
     }
 
-    /**
-     * @param InstructionSetInterface $set
-     * @return $this
-     */
-    public function addSet(InstructionSetInterface $set) {
-        $this->sets[] = $set;
-        return $this;
-    }
 
-    /**
-     * @param InstructionSetInterface $set
-     * @return $this
-     */
-    public function removeSet(InstructionSetInterface $set) {
-        if(($idx = array_search($set, $this->sets)) !== false)
-            unset($this->sets[$idx]);
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getInstructionFactory(string $name): ?InstructionFactoryInterface
+    public function offsetExists($offset)
     {
-        foreach($this->sets as $set) {
-            if($s = $set->getInstructionFactory($name))
-                return $s;
-        }
-        return NULL;
+        return isset($this->setup[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return $this->setup[$offset] ?? NULL;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        if($offset === NULL)
+            $this->setup[] = $value;
+        else
+            $this->setup[$offset] = $value;
+    }
+
+    public function offsetUnset($offset)
+    {
+        unset($this->setup[$offset]);
     }
 }

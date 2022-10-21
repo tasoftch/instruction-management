@@ -35,11 +35,86 @@
 namespace TASoft\InstructionQueue\Loader;
 
 
+use TASoft\InstructionQueue\Exception\BadInstructionException;
+use TASoft\InstructionQueue\Exception\FileNotFoundException;
+use TASoft\InstructionQueue\Loader\InstructionSet\ChainInstructionSet;
+use TASoft\InstructionQueue\Loader\InstructionSet\DirectoryInstructionSet;
 use TASoft\InstructionQueue\Loader\InstructionSet\InstructionSetInterface;
 use TASoft\InstructionQueue\Loader\Model\InstructionData;
 
 class BinaryFileDataLoader extends AbstractBinaryDataLoader
 {
+    /** @var string */
+    private $version;
+    /** @var InstructionSetInterface */
+    private $instructionSet;
+    /** @var InstructionData[] */
+    private $instructionData;
+
+    /**
+     * BinaryFileDataLoader constructor.
+     * @param string $version
+     * @param string $libraryPathPrefix
+     */
+    public function __construct(string $version, string $libraryPathPrefix = './')
+    {
+        list($v1, $v2) = explode(".", $version);
+        $this->version = $version;
+        $lib2 = "$libraryPathPrefix/$v1";
+        $lib1 = "$libraryPathPrefix/$v1/$v2";
+
+        $iFactory = new ChainInstructionSet();
+        if(is_dir($lib1)) {
+            $iFactory->addSet(
+                new DirectoryInstructionSet($lib1)
+            );
+        }
+        if(is_dir($lib2)) {
+            $iFactory->addSet(
+                new DirectoryInstructionSet($lib2)
+            );
+        }
+        $this->instructionSet = $iFactory;
+    }
+
+    /**
+     * @param string $filename
+     * @param bool $replace_current_data
+     */
+    public function importInstructionData(string $filename, bool $replace_current_data = true) {
+        if(!is_file($filename) || !is_readable($filename))
+            throw new FileNotFoundException("File does not exist");
+
+        if($replace_current_data)
+            $this->instructionData = [];
+
+        $lines = file($filename);
+        $hdr = array_shift($lines);
+        list($cmd, $sig, $version) = preg_split("/\s+/i", $hdr);
+        if($cmd == 'M86' && $sig == 841486) {
+            if($this->getVersion() != $version)
+                throw new \InvalidArgumentException("Version does not match with loaded library");
+
+            foreach($lines as $line) {
+                $line = trim($line);
+                list($cmd, $args) = preg_split("/\s+/i", $line);
+                $d = new InstructionData($cmd, $args);
+                if($this->getInstructionSet()->getInstructionFactory($d)) {
+                    $this->instructionData[] = $d;
+                } else
+                    throw (new BadInstructionException("Bad instruction"))->setInstructionModel($d);
+            }
+        } else
+            throw new \InvalidArgumentException("Can not parse header signature");
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
 
 
     /**
@@ -47,7 +122,7 @@ class BinaryFileDataLoader extends AbstractBinaryDataLoader
      */
     protected function getInstructionSet(): InstructionSetInterface
     {
-        // TODO: Implement getInstructionSet() method.
+        return $this->instructionSet;
     }
 
     /**
@@ -55,6 +130,6 @@ class BinaryFileDataLoader extends AbstractBinaryDataLoader
      */
     protected function getInstructionModels(): array
     {
-        // TODO: Implement getInstructionModels() method.
+        return $this->instructionData;
     }
 }
