@@ -36,6 +36,7 @@ namespace TASoft\InstructionQueue\Loader;
 
 
 use TASoft\InstructionQueue\Exception\BadInstructionException;
+use TASoft\InstructionQueue\Exception\Loader\LoaderException;
 use TASoft\InstructionQueue\InstructionQueueInterface;
 use TASoft\InstructionQueue\Loader\InstructionFactory\InstructionPreflightFactoryInterface;
 use TASoft\InstructionQueue\Loader\InstructionSet\InstructionSetInterface;
@@ -61,14 +62,19 @@ abstract class AbstractBinaryDataLoader implements LoaderInterface
         $set = $this->getInstructionSet();
 
         foreach($this->getInstructionModels() as $data) {
-            $f = $set->getInstructionFactory($data->getInstructionName());
-            if($f) {
-                $i = $f->makeInstruction($data);
-                if($i)
-                    $instructionQueue->addInstruction($i, $data->getLabel());
-            } else {
-                $n = $data->getInstructionName();
-                throw (new BadInstructionException("Unknown instruction $n"))->setInstructionModel($data);
+            try {
+                $f = $set->getInstructionFactory($data->getInstructionName());
+                if($f) {
+                    $i = $f->makeInstruction($data);
+                    if($i)
+                        $instructionQueue->addInstruction($i, $data->getLabel());
+                } else {
+                    $n = $data->getInstructionName();
+                    throw (new BadInstructionException("Unknown instruction $n"))->setInstructionModel($data);
+                }
+            } catch (LoaderException $exception) {
+                $exception->setCodeLine( $data->getLine() );
+                throw $exception;
             }
         }
     }

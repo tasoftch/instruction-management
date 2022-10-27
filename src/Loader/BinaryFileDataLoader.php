@@ -37,6 +37,8 @@ namespace TASoft\InstructionQueue\Loader;
 
 use TASoft\InstructionQueue\Exception\BadInstructionException;
 use TASoft\InstructionQueue\Exception\FileNotFoundException;
+use TASoft\InstructionQueue\Exception\Loader\LoaderException;
+use TASoft\InstructionQueue\Exception\Loader\UnknownInstructionException;
 use TASoft\InstructionQueue\Loader\InstructionSet\ChainInstructionSet;
 use TASoft\InstructionQueue\Loader\InstructionSet\DirectoryInstructionSet;
 use TASoft\InstructionQueue\Loader\InstructionSet\InstructionSetInterface;
@@ -95,18 +97,24 @@ class BinaryFileDataLoader extends AbstractBinaryDataLoader
             if($this->getVersion() != $version)
                 throw new \InvalidArgumentException("Version does not match with loaded library");
 
-            foreach($lines as $line) {
+            foreach($lines as $lineno => $line) {
                 $line = trim($line);
                 $args = preg_split("/\s+/i", $line);
                 $cmd = array_shift($args);
                 if(!$cmd)
                     continue;
 
-                $d = new InstructionData($cmd, $args);
-                if($this->getInstructionSet()->getInstructionFactory($d->getInstructionName())) {
-                    $this->instructionData[] = $d;
-                } else
-                    throw (new BadInstructionException("Bad instruction"))->setInstructionModel($d);
+                try {
+                    $d = new InstructionData($cmd, $lineno, $args);
+
+                    if($this->getInstructionSet()->getInstructionFactory($d->getInstructionName())) {
+                        $this->instructionData[] = $d;
+                    } else
+                        throw (new UnknownInstructionException("Bad instruction ".$d->getInstructionName()))->setInstructionModel($d);
+                } catch (LoaderException $exception) {
+                    $exception->setCodeLine($lineno);
+                    throw $exception;
+                }
             }
         } else
             throw new \InvalidArgumentException("Can not parse header signature");

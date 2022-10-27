@@ -32,58 +32,29 @@
  *
  */
 
-namespace TASoft\InstructionQueue\Loader\Model;
+namespace TASoft\InstructionQueue\Exception\Loader;
 
 
-class InstructionData extends \ArrayObject
+class LoaderArgumentException extends LoaderException
 {
-    /** @var string */
-    private $instructionName;
-    /** @var string|null */
-    private $label;
-
-    private $line;
+    /** @var int|null */
+    private $argument;
 
     /**
-     * InstructionData constructor.
-     * @param string $instructionName
-     * @param array $data
+     * @return int|null
      */
-    public function __construct(string $instructionName, int $line, array $data = [])
+    public function getArgument(): ?int
     {
-        $this->instructionName = $instructionName;
-        parent::__construct($data);
-
-        $this->line = $line;
-
-        $lb = array_pop($data);
-        if(array_pop($data) == '>' && $lb) {
-            $this->label = $lb;
-        }
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getInstructionName(): string
-    {
-        return $this->instructionName;
+        return $this->argument;
     }
 
     /**
-     * @return string|null
+     * @param int|null $argument
+     * @return LoaderArgumentException
      */
-    public function getLabel(): ?string
+    public function setArgument(?int $argument): LoaderArgumentException
     {
-        return $this->label;
-    }
-
-    /**
-     * @return int
-     */
-    public function getLine(): int
-    {
-        return $this->line;
+        $this->argument = $argument;
+        return $this;
     }
 }
