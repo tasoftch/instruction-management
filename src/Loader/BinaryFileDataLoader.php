@@ -101,7 +101,7 @@ class BinaryFileDataLoader extends AbstractBinaryDataLoader
                 $line = trim($line);
                 $args = preg_split("/\s+/i", $line);
                 $cmd = array_shift($args);
-                if(!$cmd)
+                if(!$cmd || $cmd == '#')
                     continue;
 
                 try {
